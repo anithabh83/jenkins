@@ -10,7 +10,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                checkout scm
+                git url: 'https://github.com/anithabh83/jenkins.git'
             }
         }
 
@@ -19,6 +19,16 @@ pipeline {
                 sh """
                 cd ${FOLDER}
                 mvn clean test
+                """
+            }
+        }
+
+        stage('Build') {
+            when { branch 'master' } // Only build on master
+            steps {
+                sh """
+                cd ${FOLDER}
+                mvn clean package -DskipTests
                 """
             }
         }
@@ -37,21 +47,8 @@ pipeline {
             }
         }
 
-        /* -------------------------------
-           MAIN BRANCH ONLY: BUILD + DEPLOY 
-        ---------------------------------- */
-        stage('Build') {
-            when { branch 'master' }
-            steps {
-                sh """
-                cd ${FOLDER}
-                mvn clean package -DskipTests
-                """
-            }
-        }
-
         stage('Approval Before Deployment') {
-            when { branch 'master' }
+            when { branch 'master' } // Only on master
             steps {
                 script {
                     timeout(time: 5, unit: 'MINUTES') {
@@ -62,7 +59,7 @@ pipeline {
         }
 
         stage('Deploy') {
-            when { branch 'master' }
+            when { branch 'master' } // Only on master
             steps {
                 sh """
                 cd ${FOLDER}/target
